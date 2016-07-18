@@ -22,17 +22,12 @@
 size_t unicode_buffer_size(const char * s, size_t width) {
 	size_t counter = 0;
 	size_t updated_counter = 0;
-	for(; *s && *s != '\0' && updated_counter < width; s++) {
+	while(s[updated_counter] && updated_counter < width){
 		counter = updated_counter;
-		if((*s & 0xc0) == 0xc0) {
+		if((s[updated_counter] & 0xc0) == 0xc0) {
 			// New multi-byte Unicode character
-			updated_counter++;
-			char x = *s; // Make copy of *s
-			for(int i=6; i>0 && (((x >> i) & 1) == 1); i--) {
-				// Each extra byte
-				updated_counter++;
-				s++;
-			}
+			uint8_t nbBytes = __builtin_clz(~s[updated_counter]);
+			updated_counter += nbBytes;
 		} else {
 			// ASCII
 			updated_counter++;
@@ -40,6 +35,6 @@ size_t unicode_buffer_size(const char * s, size_t width) {
 	}
 	// Append null character
 	if(updated_counter < width)
-	    return updated_counter + 1;
+		return updated_counter + 1;
 	return counter + 1;
 }
